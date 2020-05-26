@@ -1,0 +1,1 @@
+class SimpleHouse(Shape):
