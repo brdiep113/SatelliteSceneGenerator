@@ -7,7 +7,7 @@ import random
 
 
 # constants
-my_dpi = 96
+my_dpi = 128
 SHAPE = (1024, 1024)
 
 
@@ -30,7 +30,6 @@ def plot_sample_img(scene, image_outpath, image_count):
         p3 = np.array((c, center, d))
         p4 = np.array((d, center, a))
 
-        plt.plot(center[0], center[1], marker='o', markersize=3, color="red")
         plt.fill(p1[:, 0], p1[:, 1], "r")
         plt.fill(p2[:, 0], p2[:, 1], "g")
         plt.fill(p3[:, 0], p3[:, 1], "b")
@@ -77,31 +76,80 @@ def get_edges(data_dictionary):
     x_list, y_list = read_coordinates(data_dictionary)
     edge_list = []
 
-    for i in range(0, len(x_list) - 1):
+    cx = data_dictionary['Center'][0]
+    cy = data_dictionary['Center'][1]
+
+    center = np.array((cx, cy))
+
+    for i in range(0, len(x_list)):
         anchor = np.array((x_list[i], y_list[i]))
         if i == 0:
-            to_prev = len(x_list) - 2
+            to_prev = len(x_list) - 1
             to_next = i + 1
-        elif i == len(x_list) - 2:
+        elif i == len(x_list) - 1:
             to_prev = i - 1
             to_next = 0
 
-        edge_to_center = (anchor - np.array((x_list[0], y_list[0]))).tolist()
-        edge_to_prev = (np.array((x_list[to_prev], y_list[to_prev])) - anchor).tolist()
-        edge_to_next = (np.array((x_list[to_next], y_list[to_next])) - anchor).tolist()
-        edge_list.append([edge_to_prev, edge_to_center, edge_to_next])
+        edge_to_center = (center - anchor)
+        edge_to_prev = (np.array((x_list[to_prev], y_list[to_prev])) - anchor)
+        edge_to_next = (np.array((x_list[to_next], y_list[to_next])) - anchor)
+
+        edge_to_center = edge_to_center / np.linalg.norm(edge_to_center)
+        edge_to_prev = edge_to_prev / np.linalg.norm(edge_to_prev)
+        edge_to_next = edge_to_next / np.linalg.norm(edge_to_next)
+
+        edge_list.append([edge_to_prev.tolist(), edge_to_center.tolist(), edge_to_next.tolist()])
 
     return edge_list
 
 
+def get_edges1(data_dictionary):
+
+    x_list, y_list = read_coordinates(data_dictionary)
+    edge_list = []
+
+    for i in range(0, len(x_list)):
+        anchor = np.array((x_list[i], y_list[i]))
+        if i == 0:
+            to_prev = len(x_list) - 1
+            to_next = i + 1
+        elif i == len(x_list) - 1:
+            to_prev = i - 1
+            to_next = 0
+
+        edge_to_center = (np.array((x_list[0], y_list[0])) - anchor).tolist()
+        edge_to_prev = (np.array((x_list[to_prev], y_list[to_prev])) - anchor).tolist()
+        edge_to_next = (np.array((x_list[to_next], y_list[to_next])) - anchor).tolist()
+
+        edge_list.append([edge_to_prev, edge_to_center, edge_to_next])
+
+    return edge_list
+
+def get_center_edges(data_dictionary):
+    x_list, y_list = read_coordinates(data_dictionary)
+    cx = data_dictionary['Center'][0]
+    cy = data_dictionary['Center'][1]
+
+    center = np.array((cx, cy))
+    edges = []
+
+    for i in range(len(x_list)):
+        edge = np.array((x_list[i], y_list[i]) - center).tolist()
+        edge = edge / np.linalg.norm(edge)
+        edges.append(edge.tolist())
+
+    return edges
+
+
 def get_facets(structure):
     img_matrix = structure.vertices
-    center, a, b, c, d = img_matrix[:, 0], img_matrix[:, 1], img_matrix[:, 2], img_matrix[:, 3], img_matrix[:, 4]
+    center = structure.center
+    a, b, c, d = img_matrix[:, 0], img_matrix[:, 1], img_matrix[:, 2], img_matrix[:, 3]
 
-    p1 = np.array((center, a, b))
-    p2 = np.array((center, b, c))
-    p3 = np.array((center, c, d))
-    p4 = np.array((center, a, d))
+    p1 = np.array((a, center, b))
+    p2 = np.array((b, center, c))
+    p3 = np.array((c, center, d))
+    p4 = np.array((d, center, a))
 
     return [p1, p2, p3, p4]
 
@@ -114,8 +162,8 @@ def fill_scene(max_shape_count: int, scene: Scene, json) -> None:
     while failed < 10 and generated < max_shape_count:
         x = random.uniform(256, 768)
         y = random.uniform(256, 768)
-        w = random.uniform(40, 160)
-        h = random.uniform(40, 160)
+        w = random.uniform(60, 160)
+        h = random.uniform(60, 160)
         angle = random.uniform(0, 360)
         shape = RotatedRect(x, y, w, h, angle)
         offset = np.array((random.uniform(-w / 4, w / 4), random.uniform(-h / 4, h / 4)))
@@ -126,11 +174,14 @@ def fill_scene(max_shape_count: int, scene: Scene, json) -> None:
 
         else:
             scene.add_building(shape)
-            x_pts = str(shape.vertices[0,:].tolist())
-            y_pts = str(shape.vertices[1,:].tolist())
+            x_pts = str(shape.vertices[0,:].tolist()[1:])
+            y_pts = str(shape.vertices[1,:].tolist()[1:])
 
             structure_data = {"BuildingID": str(generated), "ImageID": scene.name, "X": x_pts, "Y": y_pts}
+            structure_data["Center"] = shape.center.tolist()
             structure_data["Edges"] = get_edges(structure_data)
+            structure_data["Edges"].append(get_center_edges(structure_data))
+            structure_data["Facets"] = [s.tolist() for s in get_facets(shape)]
             json.append(structure_data)
             generated += 1
             failed = 0

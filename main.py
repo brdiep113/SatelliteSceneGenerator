@@ -4,6 +4,7 @@ from Shape.SimpleHouse import RotatedRect
 import random
 import numpy as np
 import json
+import os
 from PIL import Image
 
 image_outpath = "SampleImages/Image"
@@ -21,10 +22,5 @@ for i in range(sample_size):
     fill_scene(max_buildings, scene, final_json)
     plot_sample_img(scene, image_outpath, i)
 
-#im = Image.open("SampleImages/Image/image_truth_0.png")
-#imarray = np.array(im)
-
 with open(ground_truth_outpath, 'w') as outfile:
     json.dump(final_json, outfile)
-
-#plot_vectors(imarray, final_json[0])
