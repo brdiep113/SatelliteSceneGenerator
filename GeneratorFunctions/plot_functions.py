@@ -50,7 +50,7 @@ def plot_ground_truth(scene, image_outpath, image_count):
 
     truth = plt.figure()
     DPI = truth.get_dpi()
-    truth.set_size_inches(1330.0 / float(DPI), 1330.0 / float(DPI))
+    truth.set_size_inches(1322.0 / float(DPI), 1330.0 / float(DPI))
 
     for structure in scene.buildings:
         x, y = structure.vertices[0], structure.vertices[1]
