@@ -16,7 +16,6 @@ def plot_sample_img(scene, image_outpath, image_count):
 
     img = plt.figure()
     DPI = img.get_dpi()
-    print(DPI)
     img.set_size_inches(1330.0 / float(DPI), 1330.0 / float(DPI))
 
     axes = plt.gca()
@@ -48,13 +47,19 @@ def plot_sample_img(scene, image_outpath, image_count):
     plt.close()
 
 def plot_ground_truth(scene, image_outpath, image_count):
+
     truth = plt.figure()
     DPI = truth.get_dpi()
     truth.set_size_inches(1330.0 / float(DPI), 1330.0 / float(DPI))
 
     for structure in scene.buildings:
-        x, y = structure.matrix[:, 0], structure.matrix[:, 1]
+        x, y = structure.vertices[0], structure.vertices[1]
         plt.plot(x, y, 'o', color='black')
+        plt.plot(structure.center[0], structure.center[1], 'o', color='black')
+
+    axes = plt.gca()
+    axes.set_xlim([0, 1024])
+    axes.set_ylim([0, 1024])
 
     # Clear grid
     plt.axis('off')
