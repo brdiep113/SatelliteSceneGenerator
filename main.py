@@ -16,7 +16,7 @@ test_ground_truth_outpath = "SampleImages/Test_GroundTruth"
 
 final_json = []
 
-sample_size = 4
+sample_size = 200
 scene_size = (1024, 1024)
 
 test_size = 10
