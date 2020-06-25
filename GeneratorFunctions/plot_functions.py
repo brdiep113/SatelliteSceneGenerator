@@ -7,14 +7,18 @@ import random
 
 
 # constants
-my_dpi = 128
+my_dpi = 96
 SHAPE = (1024, 1024)
 
 
 def plot_sample_img(scene, image_outpath, image_count):
     noise = np.random.normal(255. / 2, 255. / 10, SHAPE)
 
-    img = plt.figure(figsize=(1024 / my_dpi, 1024 / my_dpi), dpi=my_dpi)
+    img = plt.figure()
+    DPI = img.get_dpi()
+    print(DPI)
+    img.set_size_inches(1330.0 / float(DPI), 1330.0 / float(DPI))
+
     axes = plt.gca()
     axes.imshow(noise, extent=[-1024, 1024, -1024, 1024])
     axes.set_xlim([0, 1024])
@@ -40,9 +44,25 @@ def plot_sample_img(scene, image_outpath, image_count):
         plt.grid(b=None)
         plt.box(False)
 
-    img.savefig(path.join(image_outpath, "image_{0}.png".format(image_count)), bbox_inches='tight', pad_inches=0)
-    plt.clf()
+    img.savefig(path.join(image_outpath, "image_{0}.png".format(image_count)), bbox_inches='tight', pad_inches=0, dpi=DPI)
+    plt.close()
 
+def plot_ground_truth(scene, image_outpath, image_count):
+    truth = plt.figure()
+    DPI = truth.get_dpi()
+    truth.set_size_inches(1330.0 / float(DPI), 1330.0 / float(DPI))
+
+    for structure in scene.buildings:
+        x, y = structure.matrix[:, 0], structure.matrix[:, 1]
+        plt.plot(x, y, 'o', color='black')
+
+    # Clear grid
+    plt.axis('off')
+    plt.grid(b=None)
+    plt.box(False)
+
+    truth.savefig(path.join(image_outpath, "image_{0}.png".format(image_count)), bbox_inches='tight', pad_inches=0, dpi=DPI)
+    plt.close()
 
 def plot_vectors(image, data_dictionary):
 
