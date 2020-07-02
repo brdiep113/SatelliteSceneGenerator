@@ -204,6 +204,7 @@ def fill_scene(max_shape_count: int, scene: Scene, json) -> None:
     generated = 0
     failed = 0
 
+    structure_data = {"image_name": scene.name}
     while failed < 10 and generated < max_shape_count:
         x = random.uniform(256, 768)
         y = random.uniform(256, 768)
@@ -218,15 +219,20 @@ def fill_scene(max_shape_count: int, scene: Scene, json) -> None:
             failed += 1
 
         else:
+            building_data = {generated: {}}
             scene.add_building(shape)
             x_pts = str(shape.vertices[0,:].tolist()[1:])
             y_pts = str(shape.vertices[1,:].tolist()[1:])
 
-            structure_data = {"BuildingID": str(generated), "ImageID": scene.name, "X": x_pts, "Y": y_pts}
-            structure_data["Center"] = shape.center.tolist()
-            structure_data["Edges"] = get_edges(structure_data)
-            structure_data["Edges"].append(get_center_edges(structure_data))
-            structure_data["Facets"] = [s.tolist() for s in get_facets(shape)]
+            building_data[generated]["X"] = x_pts
+            building_data[generated]["Y"] = y_pts
+            building_data[generated]["X"].append(shape.center[0])
+            building_data[generated]["Y"].append(shape.center[1])
+            building_data[generated]["Center"] = shape.center.tolist()
+            building_data[generated]["Edges"] = get_edges(structure_data)
+            building_data[generated]["Edges"].append(get_center_edges(structure_data))
+            building_data[generated]["Facets"] = [s.tolist() for s in get_facets(shape)]
+            structure_data["image_data"] = building_data
             json.append(structure_data)
             generated += 1
             failed = 0
